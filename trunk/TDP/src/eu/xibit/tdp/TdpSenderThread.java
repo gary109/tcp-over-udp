@@ -240,7 +240,9 @@ class TdpSenderThread extends Thread {
         // socket id
         insertLong(outData, socket.getSocketId(), 1);
 
-		datagramSocket.send(new DatagramPacket(outData, outData.length, socket.getRemoteAddress()));
+		DatagramPacket dp = new DatagramPacket(outData, outData.length, socket.getRemoteAddress());
+		datagramSocket.send(dp);
+		datagramSocket.send(dp);
     }
 	
 	private void insertLong(byte[] data, long value, int pos) {
