@@ -65,12 +65,14 @@ class TdpSenderThread extends Thread {
             return socketId;
         }
     }
+	private static final long KEEP_ALIVE_INTERVAL = 10000;
     private final LinkedList<TdpPacket> packets = new LinkedList<TdpPacket>();
     private final LinkedList<DatagramPacket> otherPackets = new LinkedList<DatagramPacket>();
     private final DatagramSocket datagramSocket;
     private final TdpServerSocket serverSocket;
     private final TdpChannel socket;
 	private volatile boolean stopped = false;
+	private long lastSendTime = 0;
 
     public TdpSenderThread(DatagramSocket datagramSocket, TdpServerSocket serverSocket, TdpChannel socket) {
         super("TdpSenderThread");
@@ -139,6 +141,19 @@ class TdpSenderThread extends Thread {
                 Logger.getLogger(TdpSenderThread.class.getName()).log(Level.SEVERE, null, ex);
                 pollTdpPacket();
             }
+			
+			// sending keep alive if needed
+			if (serverSocket == null) {
+				if (lastSendTime < System.currentTimeMillis() - KEEP_ALIVE_INTERVAL) {
+					touch();
+					try {
+						sendKeepAlive();
+					} catch (IOException ex) {
+						// TODO ???
+					}
+				}
+			}
+			
             try {
                 // nothing to send, wait a bit
                 Thread.sleep(10);
@@ -148,6 +163,10 @@ class TdpSenderThread extends Thread {
         }
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "SenderThread stopped.");
     }
+	
+	public synchronized void touch() {
+		this.lastSendTime = System.currentTimeMillis();
+	}
 
     public void addDataPacket(DatagramPacket packet, long messageId, long socketId) {
         while (packets.size() > 1000) {
@@ -211,4 +230,27 @@ class TdpSenderThread extends Thread {
 		this.stopped = true;
 		this.interrupt();
 	}
+	
+	void sendKeepAlive() throws IOException {
+        byte[] outData = new byte[9];
+
+        // protocol command
+        outData[0] = 2;
+
+        // socket id
+        insertLong(outData, socket.getSocketId(), 1);
+
+		datagramSocket.send(new DatagramPacket(outData, outData.length, socket.getRemoteAddress()));
+    }
+	
+	private void insertLong(byte[] data, long value, int pos) {
+        data[pos] = (byte) (value & 0xff);
+        data[pos + 1] = (byte) ((value >>> 8) & 0xff);
+        data[pos + 2] = (byte) ((value >>> 16) & 0xff);
+        data[pos + 3] = (byte) ((value >>> 24) & 0xff);
+        data[pos + 4] = (byte) ((value >>> 32) & 0xff);
+        data[pos + 5] = (byte) ((value >>> 40) & 0xff);
+        data[pos + 6] = (byte) ((value >>> 48) & 0xff);
+        data[pos + 7] = (byte) ((value >>> 56) & 0xff);
+    }
 }
