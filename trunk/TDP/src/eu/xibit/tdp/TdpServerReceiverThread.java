@@ -157,6 +157,7 @@ class TdpServerReceiverThread extends Thread {
     private final TdpServerChannel serverSocket;
     private final TdpSenderThread senderThread;
 	private volatile boolean stopped = false;
+	private long lastCleanStamp = System.currentTimeMillis();
 
     public TdpServerReceiverThread(TdpServerChannel serverSocket, TdpSenderThread senderThread) {
         super("TTdpServerReceiverThread");
@@ -180,6 +181,11 @@ class TdpServerReceiverThread extends Thread {
                     try {
                         datagramSocket.receive(packet);
                     } catch (SocketTimeoutException ex) {
+						// clean old clients
+						if (lastCleanStamp < System.currentTimeMillis() - 10000) {
+							serverSocket.cleanTimedOutChannels();
+							lastCleanStamp = System.currentTimeMillis();
+						}
                         continue;
                     }
                     if (packet.getLength() > 0) {

@@ -6,6 +6,7 @@ package eu.xibit.tdp;
 
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -81,4 +82,19 @@ public final class TdpServerChannel {
     public IServerChannelEventListener getServerListener() {
         return serverListener;
     }
+	
+	void cleanTimedOutChannels() {
+		long ss = System.currentTimeMillis();
+		ArrayList<TdpChannel> closeChannels = new ArrayList<TdpChannel>();
+		
+		for (TdpChannel c : sockets.values()) {
+			if (c.getLastKeepAlive() < ss - 10000) {
+				closeChannels.add(c);
+			}
+		}
+		
+		for (TdpChannel c: closeChannels) {
+			c.close();
+		}
+	}
 }
