@@ -6,8 +6,6 @@ package eu.xibit.tdp;
 
 import java.net.SocketException;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -65,5 +63,10 @@ public final class TdpServerSocket {
 
 	public TdpSocket getSocket(long socketId) {
 		return sockets.get(socketId);
+	}
+	
+	public void close() {
+		serverChannel.close();
+		sockets.clear();
 	}
 }
