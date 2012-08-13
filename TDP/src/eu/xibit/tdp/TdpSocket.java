@@ -13,7 +13,7 @@ import java.io.IOException;
 public final class TdpSocket {
 	
 	private final TdpChannel channel;
-	private final ISocketEventListener eventListener;
+	private volatile ISocketEventListener eventListener;
 	private final TdpInputStream inputStream;
 	private final TdpOutputStream outputStream;
 	
@@ -24,12 +24,11 @@ public final class TdpSocket {
 		this.outputStream = new TdpOutputStream(channel);
 	}
 
-//	public TdpSocket(TdpChannel channel, ISocketEventListener eventListener) {
-//		this.channel = channel;
-//		this.eventListener = eventListener;
-//		this.inputStream = new TdpInputStream();
-//		this.outputStream = new TdpOutputStream(channel);
-//	}
+	TdpSocket(TdpChannel channel) {
+		this.channel = channel;
+		this.inputStream = new TdpInputStream();
+		this.outputStream = new TdpOutputStream(channel);
+	}
 	
 	private TdpChannel initChannel(String host, int port) throws IOException {
 		return new TdpChannel(host, port, new IClientChannelEventListener() {
@@ -53,6 +52,10 @@ public final class TdpSocket {
 
 	public ISocketEventListener getEventListener() {
 		return eventListener;
+	}
+
+	public void setEventListener(ISocketEventListener eventListener) {
+		this.eventListener = eventListener;
 	}
 
 	public TdpInputStream getInputStream() {
