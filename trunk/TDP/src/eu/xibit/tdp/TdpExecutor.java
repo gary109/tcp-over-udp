@@ -5,6 +5,8 @@
 package eu.xibit.tdp;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -13,18 +15,18 @@ import java.util.concurrent.Executors;
  */
 final class TdpExecutor {
     
-    private static final Executor executor = Executors.newFixedThreadPool(32);
-    private static final Executor dataExecutor = Executors.newFixedThreadPool(1);
+    private final ExecutorService executor = Executors.newFixedThreadPool(32);
+    private final ExecutorService dataExecutor = Executors.newFixedThreadPool(1);
     
-    public static void execute(Runnable task) {
+    public void execute(Runnable task) {
         executor.execute(task);
     }
     
-    public static void executeData(Runnable task) {
+    public void executeData(Runnable task) {
         dataExecutor.execute(task);
     }
 
-    public TdpExecutor() {
+    TdpExecutor() {
     }
     
 }

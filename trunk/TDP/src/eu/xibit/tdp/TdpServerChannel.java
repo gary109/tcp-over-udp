@@ -21,6 +21,7 @@ public final class TdpServerChannel {
     private final IServerChannelEventListener serverListener;
     private TdpServerReceiverThread receiverThread;
     private TdpSenderThread senderThread;
+	private final TdpExecutor executor = new TdpExecutor();
 
     public TdpServerChannel(int port, IServerChannelEventListener serverListener) throws SocketException {
         this.port = port;
