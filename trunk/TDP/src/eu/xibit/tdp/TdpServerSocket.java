@@ -4,81 +4,66 @@
  */
 package eu.xibit.tdp;
 
-import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  *
- * @author dipacs
+ * @author David
  */
 public final class TdpServerSocket {
 
-    private final HashMap<Long, TdpChannel> sockets = new HashMap<Long, TdpChannel>();
-    private final int port;
-    private final DatagramSocket datagramSocket;
-    private final IServerChannelEventListener serverListener;
-    private TdpServerReceiverThread receiverThread;
-    private TdpSenderThread senderThread;
+	private final TdpServerChannel serverChannel;
+	private final LinkedBlockingQueue<TdpChannel> pendingConnects = new LinkedBlockingQueue<TdpChannel>();
+	private final HashMap<Long, TdpSocket> sockets = new HashMap<Long, TdpSocket>();
 
-    public TdpServerSocket(int port, IServerChannelEventListener serverListener) throws SocketException {
-        this.port = port;
-        this.datagramSocket = new DatagramSocket(port);
-        this.datagramSocket.setSoTimeout(1000);
-        this.datagramSocket.setTrafficClass(0x04 | 0x08 | 0x10);
-        this.serverListener = serverListener;
-        this.senderThread = new TdpSenderThread(datagramSocket, this, null);
-        this.receiverThread = new TdpServerReceiverThread(this, senderThread);
-        this.senderThread.start();
-        this.receiverThread.start();
-    }
+	public TdpServerSocket(int port) throws SocketException {
+		serverChannel = new TdpServerChannel(port, new IServerChannelEventListener() {
+			@Override
+			public void onClientConnected(TdpServerChannel serverSocket, TdpChannel socket) {
+				pendingConnects.add(socket);
+			}
 
-    public int getPort() {
-        return port;
-    }
+			@Override
+			public void onDataReceived(TdpServerChannel serverSocket, TdpChannel socket, byte[] data) {
+				TdpSocket sock = sockets.get(socket.getSocketId());
+				if (sock != null) {
+					sock.getInputStream().addData(data);
+					if (sock.getEventListener() != null) {
+						sock.getEventListener().onDataReceived(sock);
+					}
+				}
+			}
 
-    DatagramSocket getDatagramSocket() {
-        return datagramSocket;
-    }
+			@Override
+			public void onClientDisconnected(TdpServerChannel serverSocket, TdpChannel socket, EDisconnectReason reason) {
+				sockets.remove(socket.getSocketId());
+				TdpSocket sock = sockets.get(socket.getSocketId());
+				if (sock != null) {
+					if (sock.getEventListener() != null) {
+						sock.getEventListener().onDisconnected(sock, reason);
+					}
+				}
+			}
 
-    public synchronized void close() {
-        if (this.receiverThread == null) {
-            return;
-        }
-        if (this.receiverThread != null) {
-            this.receiverThread.stopThread();
-        }
-		
-		for (TdpChannel channel: sockets.values()) {
-			channel.close();
-		}
-		
-		if (this.senderThread != null) {
-			this.senderThread.stopThread();
-		}
-		
-        this.receiverThread = null;
-		
-		datagramSocket.close();
-    }
+			@Override
+			public void onServerSocketClosed(TdpServerChannel serverSocket) {
+				sockets.clear();
+			}
+		});
+	}
 
-    public TdpChannel getClient(long socketId) {
-        return sockets.get(socketId);
-    }
+	public synchronized TdpSocket accept() {
+		TdpChannel channel = pendingConnects.poll();
+		TdpSocket socket = new TdpSocket(channel);
+		sockets.put(channel.getSocketId(), socket);
+		return socket;
+	}
 
-    synchronized void addClient(TdpChannel socket) {
-        sockets.put(socket.getSocketId(), socket);
-    }
-
-    synchronized void removeClient(long id) {
-        sockets.remove(id);
-    }
-
-    synchronized void removeClient(TdpChannel socket) {
-        sockets.remove(socket.getSocketId());
-    }
-
-    public IServerChannelEventListener getServerListener() {
-        return serverListener;
-    }
+	public TdpSocket getSocket(long socketId) {
+		return sockets.get(socketId);
+	}
 }

@@ -69,12 +69,12 @@ class TdpSenderThread extends Thread {
     private final LinkedList<TdpPacket> packets = new LinkedList<TdpPacket>();
     private final LinkedList<DatagramPacket> otherPackets = new LinkedList<DatagramPacket>();
     private final DatagramSocket datagramSocket;
-    private final TdpServerSocket serverSocket;
+    private final TdpServerChannel serverSocket;
     private final TdpChannel socket;
 	private volatile boolean stopped = false;
 	private long lastSendTime = 0;
 
-    public TdpSenderThread(DatagramSocket datagramSocket, TdpServerSocket serverSocket, TdpChannel socket) {
+    public TdpSenderThread(DatagramSocket datagramSocket, TdpServerChannel serverSocket, TdpChannel socket) {
         super("TdpSenderThread");
         this.datagramSocket = datagramSocket;
         this.serverSocket = serverSocket;

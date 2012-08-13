@@ -154,11 +154,11 @@ class TdpServerReceiverThread extends Thread {
             return res;
         }
     }
-    private final TdpServerSocket serverSocket;
+    private final TdpServerChannel serverSocket;
     private final TdpSenderThread senderThread;
 	private volatile boolean stopped = false;
 
-    public TdpServerReceiverThread(TdpServerSocket serverSocket, TdpSenderThread senderThread) {
+    public TdpServerReceiverThread(TdpServerChannel serverSocket, TdpSenderThread senderThread) {
         super("TTdpServerReceiverThread");
         this.serverSocket = serverSocket;
         this.senderThread = senderThread;

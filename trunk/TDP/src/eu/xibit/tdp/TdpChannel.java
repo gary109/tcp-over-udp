@@ -28,7 +28,7 @@ public final class TdpChannel {
     }
     private final DatagramSocket socket;
     private final SocketAddress remoteAddress;
-    private final TdpServerSocket serverSocket;
+    private final TdpServerChannel serverSocket;
     private final String host;
     private final int port;
     private long socketId = -1;
@@ -39,9 +39,11 @@ public final class TdpChannel {
     private long lastKeepAlive = System.currentTimeMillis();
     private volatile IClientChannelEventListener listener;
     private final IServerChannelEventListener serverListener;
+	private boolean serverSide;
 
     public TdpChannel(String host, int port, IClientChannelEventListener listener) throws SocketException, IOException {
         this(new DatagramSocket(), new InetSocketAddress(host, port), null, null, null);
+		this.serverSide = false;
         this.socket.setSoTimeout(200);
         this.socket.setTrafficClass(0x04 | 0x08 | 0x10);
 
@@ -86,7 +88,8 @@ public final class TdpChannel {
         this.clientReceiverThread.start();
     }
 
-    TdpChannel(DatagramSocket socket, SocketAddress remoteAddress, TdpServerSocket serverSocket, TdpSenderThread senderThread, IServerChannelEventListener listener) {
+    TdpChannel(DatagramSocket socket, SocketAddress remoteAddress, TdpServerChannel serverSocket, TdpSenderThread senderThread, IServerChannelEventListener listener) {
+		this.serverSide = true;
         this.socket = socket;
         this.remoteAddress = remoteAddress;
         this.serverSocket = serverSocket;
@@ -245,7 +248,7 @@ public final class TdpChannel {
         setLastKeepAlive(System.currentTimeMillis());
     }
 
-    TdpServerSocket getServerSocket() {
+    TdpServerChannel getServerSocket() {
         return serverSocket;
     }
 
@@ -328,4 +331,8 @@ public final class TdpChannel {
             serverSocket.removeClient(this);
         }
     }
+
+	public boolean isServerSide() {
+		return serverSide;
+	}
 }
