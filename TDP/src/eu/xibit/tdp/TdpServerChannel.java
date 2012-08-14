@@ -15,7 +15,7 @@ import java.util.HashMap;
  */
 public final class TdpServerChannel {
 
-    private final HashMap<Long, TdpChannel> sockets = new HashMap<Long, TdpChannel>();
+    private final HashMap<Long, TdpChannel> channels = new HashMap<Long, TdpChannel>();
     private final int port;
     private final DatagramSocket datagramSocket;
     private final IServerChannelEventListener serverListener;
@@ -51,7 +51,7 @@ public final class TdpServerChannel {
             this.receiverThread.stopThread();
         }
 		
-		for (TdpChannel channel: sockets.values()) {
+		for (TdpChannel channel: channels.values()) {
 			channel.close();
 		}
 		
@@ -67,19 +67,19 @@ public final class TdpServerChannel {
     }
 
     public TdpChannel getClient(long socketId) {
-        return sockets.get(socketId);
+        return channels.get(socketId);
     }
 
     synchronized void addClient(TdpChannel socket) {
-        sockets.put(socket.getSocketId(), socket);
+        channels.put(socket.getChannelId(), socket);
     }
 
     synchronized void removeClient(long id) {
-        sockets.remove(id);
+        channels.remove(id);
     }
 
     synchronized void removeClient(TdpChannel socket) {
-        sockets.remove(socket.getSocketId());
+        channels.remove(socket.getChannelId());
     }
 
     public IServerChannelEventListener getServerListener() {
@@ -94,7 +94,7 @@ public final class TdpServerChannel {
 		long ss = System.currentTimeMillis();
 		ArrayList<TdpChannel> closeChannels = new ArrayList<TdpChannel>();
 		
-		for (TdpChannel c : sockets.values()) {
+		for (TdpChannel c : channels.values()) {
 			if (c.getLastKeepAlive() < ss - 10000) {
 				closeChannels.add(c);
 			}

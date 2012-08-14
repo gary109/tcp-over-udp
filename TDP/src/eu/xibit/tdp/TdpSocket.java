@@ -75,7 +75,7 @@ public final class TdpSocket {
 	}
 
 	public long getSocketId() {
-		return channel.getSocketId();
+		return channel.getChannelId();
 	}
 
 	public void close() {

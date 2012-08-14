@@ -26,12 +26,12 @@ public final class TdpChannel {
     public static synchronized long getNextId() {
         return nextSocketId++;
     }
-    private final DatagramSocket socket;
+    private final DatagramSocket datagramSocket;
     private final SocketAddress remoteAddress;
-    private final TdpServerChannel serverSocket;
+    private final TdpServerChannel serverChannel;
     private final String host;
     private final int port;
-    private long socketId = -1;
+    private long channelId = -1;
     private final TdpInputSorter inputStream;
     private final TdpSenderThread senderThread;
     private TdpClientReceiverThread clientReceiverThread;
@@ -44,8 +44,8 @@ public final class TdpChannel {
     public TdpChannel(String host, int port, IClientChannelEventListener listener) throws SocketException, IOException {
         this(new DatagramSocket(), new InetSocketAddress(host, port), null, null, null);
 		this.serverSide = false;
-        this.socket.setSoTimeout(200);
-        this.socket.setTrafficClass(0x04 | 0x08 | 0x10);
+        this.datagramSocket.setSoTimeout(200);
+        this.datagramSocket.setTrafficClass(0x04 | 0x08 | 0x10);
 
         // trying to login
         byte[] data = new byte[]{3};
@@ -53,9 +53,9 @@ public final class TdpChannel {
         byte[] inData = new byte[512];
         DatagramPacket inPacket = new DatagramPacket(inData, inData.length);
         for (int i = 0; i < 10; i++) {
-            this.socket.send(loginPacket);
+            this.datagramSocket.send(loginPacket);
             try {
-                this.socket.receive(inPacket);
+                this.datagramSocket.receive(inPacket);
             } catch (SocketTimeoutException ex) {
                 continue;
             }
@@ -73,11 +73,11 @@ public final class TdpChannel {
                 throw new IOException("Server does not want you to connect.");
             }
             
-            this.socketId = sockId;
+            this.channelId = sockId;
             break;
         }
         
-        if (this.socketId == -1) {
+        if (this.channelId == -1) {
             throw new IOException("Can't connect to server.");
         }
         
@@ -88,11 +88,11 @@ public final class TdpChannel {
         this.clientReceiverThread.start();
     }
 
-    TdpChannel(DatagramSocket socket, SocketAddress remoteAddress, TdpServerChannel serverSocket, TdpSenderThread senderThread, IServerChannelEventListener listener) {
+    TdpChannel(DatagramSocket datagramSocket, SocketAddress remoteAddress, TdpServerChannel serverChannel, TdpSenderThread senderThread, IServerChannelEventListener listener) {
 		this.serverSide = true;
-        this.socket = socket;
+        this.datagramSocket = datagramSocket;
         this.remoteAddress = remoteAddress;
-        this.serverSocket = serverSocket;
+        this.serverChannel = serverChannel;
         this.inputStream = new TdpInputSorter(this);
         if (remoteAddress instanceof InetSocketAddress) {
             this.host = ((InetSocketAddress) remoteAddress).getHostName();
@@ -102,15 +102,15 @@ public final class TdpChannel {
             this.port = 0;
         }
         if (senderThread == null) {
-            this.senderThread = new TdpSenderThread(socket, null, this);
+            this.senderThread = new TdpSenderThread(datagramSocket, null, this);
         } else {
             this.senderThread = senderThread;
         }
         serverListener = listener;
     }
 
-    DatagramSocket getSocket() {
-        return socket;
+    DatagramSocket getDatagramSocket() {
+        return datagramSocket;
     }
 
     SocketAddress getRemoteAddress() {
@@ -129,12 +129,12 @@ public final class TdpChannel {
         return inputStream;
     }
 
-    public long getSocketId() {
-        return socketId;
+    public long getChannelId() {
+        return channelId;
     }
 
-    void setSocketId(long socketId) {
-        this.socketId = socketId;
+    void setChannelId(long channelId) {
+        this.channelId = channelId;
     }
 
     void sendData(byte[] data) throws IOException {
@@ -145,13 +145,13 @@ public final class TdpChannel {
         outData[0] = 0;
 
         // socket id
-        insertLong(outData, socketId, 1);
+        insertLong(outData, channelId, 1);
 
         // message id
         long messageId = getNextMessageId();
         insertLong(outData, messageId, 9);
 
-        senderThread.addDataPacket(new DatagramPacket(outData, outData.length, remoteAddress), messageId, socketId);
+        senderThread.addDataPacket(new DatagramPacket(outData, outData.length, remoteAddress), messageId, channelId);
     }
 
     void sendAck(long msgId) throws IOException {
@@ -161,12 +161,12 @@ public final class TdpChannel {
         outData[0] = 1;
 
         // socket id
-        insertLong(outData, socketId, 1);
+        insertLong(outData, channelId, 1);
 
         // message id
         long messageId = msgId;
         insertLong(outData, messageId, 9);
-        socket.send(new DatagramPacket(outData, outData.length, remoteAddress));
+        datagramSocket.send(new DatagramPacket(outData, outData.length, remoteAddress));
         //senderThread.addAckPacket(new DatagramPacket(outData, outData.length, remoteAddress));
     }
 
@@ -177,7 +177,7 @@ public final class TdpChannel {
         outData[0] = 2;
 
         // socket id
-        insertLong(outData, socketId, 1);
+        insertLong(outData, channelId, 1);
 
         senderThread.addSimplePacket(new DatagramPacket(outData, outData.length, remoteAddress));
     }
@@ -200,11 +200,11 @@ public final class TdpChannel {
         outData[0] = 4;
 
         // socket id
-        insertLong(outData, socketId, 1);
+        insertLong(outData, channelId, 1);
 
-        socket.send(new DatagramPacket(outData, outData.length, remoteAddress));
-        socket.send(new DatagramPacket(outData, outData.length, remoteAddress));
-        socket.send(new DatagramPacket(outData, outData.length, remoteAddress));
+        datagramSocket.send(new DatagramPacket(outData, outData.length, remoteAddress));
+        datagramSocket.send(new DatagramPacket(outData, outData.length, remoteAddress));
+        datagramSocket.send(new DatagramPacket(outData, outData.length, remoteAddress));
 //        senderThread.addSimplePacket(new DatagramPacket(outData, outData.length, remoteAddress));
     }
 
@@ -214,11 +214,11 @@ public final class TdpChannel {
         // protocol command
         outData[0] = 5;
 
-        socket.send(new DatagramPacket(outData, outData.length, remoteAddress));
+        datagramSocket.send(new DatagramPacket(outData, outData.length, remoteAddress));
     }
 
     void acknowledgeMessage(long messageId) {
-        senderThread.acknowledgePacket(messageId, socketId);
+        senderThread.acknowledgePacket(messageId, channelId);
     }
 
     private void insertLong(byte[] data, long value, int pos) {
@@ -248,8 +248,8 @@ public final class TdpChannel {
         setLastKeepAlive(System.currentTimeMillis());
     }
 
-    TdpServerChannel getServerSocket() {
-        return serverSocket;
+    TdpServerChannel getServerChannel() {
+        return serverChannel;
     }
 
     private long readLong(byte[] data, int offset) {
@@ -270,13 +270,13 @@ public final class TdpChannel {
 	
 	public void close() {
 		closeFromReceiver();
-		if (serverSocket == null) {
+		if (serverChannel == null) {
             if (listener != null) {
 				listener.onClientDisconnected(this, EDisconnectReason.CLIENT);
 			}
         } else {
-            if (serverSocket.getServerListener() != null) {
-				serverSocket.getServerListener().onClientDisconnected(serverSocket, this, EDisconnectReason.SERVER);
+            if (serverChannel.getServerListener() != null) {
+				serverChannel.getServerListener().onClientDisconnected(serverChannel, this, EDisconnectReason.SERVER);
 			}
         }
 	}
@@ -317,7 +317,7 @@ public final class TdpChannel {
     }
     
     void closeFromOtherSide() {
-        if (serverSocket == null) {
+        if (serverChannel == null) {
             // clientSide
             clientReceiverThread.stopThread();
             
@@ -325,10 +325,10 @@ public final class TdpChannel {
                 senderThread.stopThread();
             }
 			
-			socket.close();
+			datagramSocket.close();
         } else {
             // serverSide
-            serverSocket.removeClient(this);
+            serverChannel.removeClient(this);
         }
     }
 

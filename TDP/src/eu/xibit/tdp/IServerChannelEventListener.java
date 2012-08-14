@@ -10,9 +10,9 @@ package eu.xibit.tdp;
  */
 public interface IServerChannelEventListener {
     
-    public void onClientConnected(TdpServerChannel serverSocket, TdpChannel socket);
-    public void onDataReceived(TdpServerChannel serverSocket, TdpChannel socket, byte[] data);
-    public void onClientDisconnected(TdpServerChannel serverSocket, TdpChannel socket, EDisconnectReason reason);
-    public void onServerSocketClosed(TdpServerChannel serverSocket);
+    public void onClientConnected(TdpServerChannel serverChannel, TdpChannel channel);
+    public void onDataReceived(TdpServerChannel serverChannel, TdpChannel channel, byte[] data);
+    public void onClientDisconnected(TdpServerChannel serverChannel, TdpChannel channel, EDisconnectReason reason);
+    public void onServerSocketClosed(TdpServerChannel serverChannel);
     
 }

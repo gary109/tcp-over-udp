@@ -108,7 +108,7 @@ class TdpServerReceiverThread extends Thread {
 
 		private void processLogin() {
 			TdpChannel socket = new TdpChannel(serverSocket.getDatagramSocket(), remoteAddress, serverSocket, senderThread, serverSocket.getServerListener());
-			socket.setSocketId(TdpChannel.getNextId());
+			socket.setChannelId(TdpChannel.getNextId());
 			try {
 				socket.sendLoginResponse();
 				socket.sendLoginResponse();
