@@ -245,7 +245,7 @@ class TdpSenderThread extends Thread {
 		outData[0] = 2;
 
 		// socket id
-		insertLong(outData, socket.getSocketId(), 1);
+		insertLong(outData, socket.getChannelId(), 1);
 
 		DatagramPacket dp = new DatagramPacket(outData, outData.length, socket.getRemoteAddress());
 		datagramSocket.send(dp);

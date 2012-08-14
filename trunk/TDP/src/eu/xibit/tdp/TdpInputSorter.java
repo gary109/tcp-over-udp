@@ -46,11 +46,11 @@ final class TdpInputSorter {
 				socket.getListener().onDataReceived(socket, fragment.getData());
 			}
 			if (socket.getServerListener() != null) {
-				socket.getServerSocket().getExecutor().executeData(new Runnable() {
+				socket.getServerChannel().getExecutor().executeData(new Runnable() {
 					@Override
 					public void run() {
 						if (socket.getServerListener() != null) {
-							socket.getServerListener().onDataReceived(socket.getServerSocket(), socket, fragment.getData());
+							socket.getServerListener().onDataReceived(socket.getServerChannel(), socket, fragment.getData());
 						}
 					}
 				});
@@ -65,11 +65,11 @@ final class TdpInputSorter {
 					socket.getListener().onDataReceived(socket, f.getData());
 				}
 				if (socket.getServerListener() != null) {
-					socket.getServerSocket().getExecutor().executeData(new Runnable() {
+					socket.getServerChannel().getExecutor().executeData(new Runnable() {
 						@Override
 						public void run() {
 							if (socket.getServerListener() != null) {
-								socket.getServerListener().onDataReceived(socket.getServerSocket(), socket, f.getData());
+								socket.getServerListener().onDataReceived(socket.getServerChannel(), socket, f.getData());
 							}
 						}
 					});

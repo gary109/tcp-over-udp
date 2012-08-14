@@ -10,7 +10,7 @@ package eu.xibit.tdp;
  */
 public interface IClientChannelEventListener {
     
-    public void onDataReceived(TdpChannel socket, byte[] data);
-    public void onClientDisconnected(TdpChannel socket, EDisconnectReason reason);
+    public void onDataReceived(TdpChannel channel, byte[] data);
+    public void onClientDisconnected(TdpChannel channel, EDisconnectReason reason);
     
 }

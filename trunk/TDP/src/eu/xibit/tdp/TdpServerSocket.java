@@ -27,7 +27,7 @@ public final class TdpServerSocket {
 
 			@Override
 			public void onDataReceived(TdpServerChannel serverSocket, TdpChannel socket, byte[] data) {
-				TdpSocket sock = sockets.get(socket.getSocketId());
+				TdpSocket sock = sockets.get(socket.getChannelId());
 				if (sock != null) {
 					sock.getInputStream().addData(data);
 					if (sock.getEventListener() != null) {
@@ -38,8 +38,8 @@ public final class TdpServerSocket {
 
 			@Override
 			public void onClientDisconnected(TdpServerChannel serverSocket, TdpChannel socket, EDisconnectReason reason) {
-				sockets.remove(socket.getSocketId());
-				TdpSocket sock = sockets.get(socket.getSocketId());
+				sockets.remove(socket.getChannelId());
+				TdpSocket sock = sockets.get(socket.getChannelId());
 				if (sock != null) {
 					if (sock.getEventListener() != null) {
 						sock.getEventListener().onDisconnected(sock, reason);
@@ -57,7 +57,7 @@ public final class TdpServerSocket {
 	public synchronized TdpSocket accept() {
 		TdpChannel channel = pendingConnects.poll();
 		TdpSocket socket = new TdpSocket(channel);
-		sockets.put(channel.getSocketId(), socket);
+		sockets.put(channel.getChannelId(), socket);
 		return socket;
 	}
 

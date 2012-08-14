@@ -61,7 +61,7 @@ class TdpClientReceiverThread extends Thread {
 
         private void processData() {
             long socketId = readLong(data, 1);
-            if (socketId != socket.getSocketId()) {
+            if (socketId != socket.getChannelId()) {
                 return;
             }
 
@@ -80,7 +80,7 @@ class TdpClientReceiverThread extends Thread {
 
         private void processAck() {
             long socketId = readLong(data, 1);
-            if (socketId != socket.getSocketId()) {
+            if (socketId != socket.getChannelId()) {
                 return;
             }
 
@@ -102,7 +102,7 @@ class TdpClientReceiverThread extends Thread {
 
         private void processDisconnect() {
             long socketId = readLong(data, 1);
-            if (socketId != socket.getSocketId()) {
+            if (socketId != socket.getChannelId()) {
                 return;
             }
 
@@ -141,7 +141,7 @@ class TdpClientReceiverThread extends Thread {
         try {
             while (!stopped && !isInterrupted()) {
                 try {
-                    datagramSocket = socket.getSocket();
+                    datagramSocket = socket.getDatagramSocket();
                     if (datagramSocket == null || datagramSocket.isClosed()) {
                         break;
                     }
