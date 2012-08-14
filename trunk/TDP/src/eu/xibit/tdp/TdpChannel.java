@@ -16,8 +16,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author David
+ * This class can be used to estabilish a connaction with a server. Using this class you can read the data throught events.
+ * If you want to read and write data throught InputStream and OutputStream, you need to use the TdpSocket.
+ * 
+ * Also this class is created on the server side, when a client is connected to a TdpServerSocket.
+ * 
+ * @author dipacs
  */
 public final class TdpChannel {
 
