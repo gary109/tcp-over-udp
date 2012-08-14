@@ -157,12 +157,13 @@ class TdpClientReceiverThread extends Thread {
                         new DataHandler(packet.getData(), packet.getLength()).run();
                     }
                 } catch (IOException ex) {
-                    Logger.getLogger(TdpServerReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
+					if (!stopped && !isInterrupted()) {
+						Logger.getLogger(TdpServerReceiverThread.class.getName()).log(Level.SEVERE, null, ex);
+					}
                     break;
                 }
             }
         } finally {
-            socket.close();
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "ClientReceiverThread stopped.");
         }
     }

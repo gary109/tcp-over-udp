@@ -61,6 +61,8 @@ public final class TdpServerChannel {
 		
         this.receiverThread = null;
 		
+		this.executor.stop();
+		
 		datagramSocket.close();
     }
 
@@ -83,6 +85,10 @@ public final class TdpServerChannel {
     public IServerChannelEventListener getServerListener() {
         return serverListener;
     }
+
+	TdpExecutor getExecutor() {
+		return executor;
+	}
 	
 	void cleanTimedOutChannels() {
 		long ss = System.currentTimeMillis();
