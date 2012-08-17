@@ -21,7 +21,7 @@ public final class TdpServerChannel {
     private final IServerChannelEventListener serverListener;
     private TdpServerReceiverThread receiverThread;
     private TdpSenderThread senderThread;
-	private final TdpExecutor executor = new TdpExecutor();
+    private final TdpExecutor executor = new TdpExecutor();
 
     public TdpServerChannel(int port, IServerChannelEventListener serverListener) throws SocketException {
         this.port = port;
@@ -50,20 +50,20 @@ public final class TdpServerChannel {
         if (this.receiverThread != null) {
             this.receiverThread.stopThread();
         }
-		
-		for (TdpChannel channel: channels.values()) {
-			channel.close();
-		}
-		
-		if (this.senderThread != null) {
-			this.senderThread.stopThread();
-		}
-		
+
+        for (TdpChannel channel : channels.values()) {
+            channel.close();
+        }
+
+        if (this.senderThread != null) {
+            this.senderThread.stopThread();
+        }
+
         this.receiverThread = null;
-		
-		this.executor.stop();
-		
-		datagramSocket.close();
+
+        this.executor.stop();
+
+        datagramSocket.close();
     }
 
     public TdpChannel getClient(long socketId) {
@@ -86,22 +86,22 @@ public final class TdpServerChannel {
         return serverListener;
     }
 
-	TdpExecutor getExecutor() {
-		return executor;
-	}
-	
-	void cleanTimedOutChannels() {
-		long ss = System.currentTimeMillis();
-		ArrayList<TdpChannel> closeChannels = new ArrayList<TdpChannel>();
-		
-		for (TdpChannel c : channels.values()) {
-			if (c.getLastKeepAlive() < ss - 10000) {
-				closeChannels.add(c);
-			}
-		}
-		
-		for (TdpChannel c: closeChannels) {
-			c.close();
-		}
-	}
+    TdpExecutor getExecutor() {
+        return executor;
+    }
+
+    void cleanTimedOutChannels() {
+        long ss = System.currentTimeMillis();
+        ArrayList<TdpChannel> closeChannels = new ArrayList<TdpChannel>();
+
+        for (TdpChannel c : channels.values()) {
+            if (c.getLastKeepAlive() < ss - 25000) {
+                closeChannels.add(c);
+            }
+        }
+
+        for (TdpChannel c : closeChannels) {
+            c.close();
+        }
+    }
 }
